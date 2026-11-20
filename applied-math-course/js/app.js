@@ -7,6 +7,7 @@
   const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
   const STAGES = [
+    { n: 'B', name: 'Basics', note: 'School math rebuilt from the ground up: arithmetic, algebra, graphs, shapes, data and chance. Start here if you are rusty.' },
     { n: 0, name: 'Foundations', note: 'High-school tools, tightened up to university standard.' },
     { n: 1, name: 'Year 1 core', note: 'Calculus and linear algebra, the language for everything after.' },
     { n: 2, name: 'Year 2 core', note: 'Many variables, change over time, and uncertainty.' },
@@ -20,7 +21,7 @@
 
   /* ---------- index ---------- */
   const lessons = new Map(), order = [], mods = new Map();
-  let modCounter = 0; // a module may fix its own number (the Basics on-ramp is Module 00)
+  let modCounter = 0; // a module may fix its own number (the Basics stage uses B1-B4)
   AM.modules.forEach((m) => {
     m.num = m.num != null ? m.num : ++modCounter; mods.set(m.id, m);
     m.lessons.forEach((l, li) => { l.fid = `${m.id}-${l.id}`; l.mod = m; l.num = li + 1; lessons.set(l.fid, l); order.push(l); });
@@ -28,11 +29,15 @@
   // exam-level problems registered separately (js/content/exam-*.js) are attached as the 4th tier
   (AM.examProblems || []).forEach(([fid, gen]) => { const l = lessons.get(fid); if (l && !l.practice.some((p) => p.level === 4)) l.practice.push({ level: 4, gen }); });
   const pad = (n) => String(n).padStart(2, '0');
+  const stageOf = (m) => STAGES.find((st) => st.n === m.stage) || STAGES[0];
   const today = () => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; };
 
   /* ---------- progress state ---------- */
   const S = AM.store.load();
   ['lessons', 'checks', 'stats', 'srs', 'days'].forEach((k) => { S[k] = S[k] || {}; });
+  // lessons that moved module when the Basics stage was split into B1-B4 keep their progress
+  const MOVED = { 'basics-equations': 'algebra0-equations', 'basics-powers': 'algebra1-powers', 'basics-lines': 'algebra1-lines' };
+  ['lessons', 'stats', 'srs'].forEach((k) => Object.entries(MOVED).forEach(([a, b]) => { if (S[k][a]) { if (!S[k][b]) S[k][b] = S[k][a]; delete S[k][a]; } }));
   S.exams = S.exams || [];
   Object.values(S.lessons).forEach((v) => { while (v.tiers.length < 4) v.tiers.push(0); });
   const save = () => {
@@ -221,7 +226,7 @@
         <a class="today-card${due ? ' hot' : ''}" href="#review"><span class="k">${due}</span><span class="t">lesson${due === 1 ? '' : 's'} due for review</span><span class="s">${due ? 'Spaced review keeps old topics fresh. About 2 minutes each.' : 'Nothing due. Solve more lessons to schedule reviews.'}</span></a>
         <a class="today-card" href="#progress"><span class="k">${streak()}</span><span class="t">day streak</span><span class="s">${Math.round(100 * order.reduce((a, l) => a + mastery(l.fid), 0) / order.length)}% average mastery across the course.</span></a>
         <a class="today-card" href="${weak.length ? '#' + weak[0].l.fid : '#exam'}"><span class="k">${weak.length || '✓'}</span><span class="t">${weak.length ? 'weak spot' + (weak.length > 1 ? 's' : '') : 'no weak spots yet'}</span><span class="s">${weak.length ? `Weakest: ${esc(weak[0].l.title)} (${Math.round(weak[0].acc * 100)}% correct).` : 'Try a mixed exam to find them.'}</span></a>
-      </div></section>` : mods.has('basics') ? `<p class="start-here"><b>New to this, or rusty?</b> Begin with <a href="#basics">Module 00: Math Basics</a>. It rebuilds fractions, equations, powers and graphs from scratch, gently, before anything else. Stuck on a problem anywhere? Press <b>Walk me through it</b> to see one step at a time, and use the <a href="#symbols">symbol guide</a> for any notation you don't recognise.</p>` : ''}
+      </div></section>` : mods.has('basics') ? `<p class="start-here"><b>New to this, or rusty?</b> Begin with the <a href="#basics">Basics stage</a> (modules B1 to B4). It rebuilds arithmetic, algebra, graphs, shapes and probability from scratch, gently, before anything else. Stuck on a problem anywhere? Press <b>Walk me through it</b> to see one step at a time, and use the <a href="#symbols">symbol guide</a> for any notation you don't recognise.</p>` : ''}
       <section class="method" aria-labelledby="method-h">
         <h2 id="method-h" class="section-h">How every lesson runs</h2>
         <ol class="method-steps">
@@ -277,7 +282,7 @@
 
   /* ---------- module page ---------- */
   function renderModule(m) {
-    const st = STAGES[m.stage];
+    const st = stageOf(m);
     const pre = (m.prereq || []).map((id) => mods.get(id)).filter(Boolean);
     view.innerHTML = `
       <header class="page-head">
@@ -321,7 +326,7 @@
     head.innerHTML = `
       <p class="eyebrow">Lesson ${m.num}.${l.num} · ${m.title}</p>
       <h1>${l.title}</h1>
-      <div class="lesson-meta"><span>${l.minutes || 25} min</span><span>Stage ${m.stage}: ${STAGES[m.stage].name}</span><span class="tiers-inline" id="lesson-tiers"></span></div>`;
+      <div class="lesson-meta"><span>${l.minutes || 25} min</span><span>Stage ${m.stage}: ${stageOf(m).name}</span><span class="tiers-inline" id="lesson-tiers"></span></div>`;
     view.appendChild(head);
     const updateTiers = () => {
       const t = (S.lessons[l.fid] && S.lessons[l.fid].tiers) || [0, 0, 0, 0];
@@ -565,7 +570,7 @@
   function runExam(cfg) {
     let pool = order;
     if (cfg.scope === 'done') pool = order.filter((l) => S.lessons[l.fid] && S.lessons[l.fid].tiers.some(Boolean));
-    else if (cfg.scope.startsWith('stage-')) pool = order.filter((l) => l.mod.stage === +cfg.scope.slice(6));
+    else if (cfg.scope.startsWith('stage-')) pool = order.filter((l) => String(l.mod.stage) === cfg.scope.slice(6));
     else if (cfg.scope.startsWith('mod-')) pool = order.filter((l) => l.mod.id === cfg.scope.slice(4));
     if (!pool.length) pool = order;
     const items = []; pool.forEach((l) => l.practice.forEach((p) => { if (cfg.levels.includes(p.level)) items.push({ l, p }); }));

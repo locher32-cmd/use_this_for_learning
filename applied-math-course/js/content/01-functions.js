@@ -19,7 +19,7 @@
   AM.module({
     id: 'functions', stage: 0, title: 'Functions & Graphs', aka: 'Precalculus',
     blurb: 'The objects every later module manipulates: functions, their graphs, exponential growth and the periodic functions behind waves. If any of this feels rusty, fix it here first. Calculus moves much faster when these are automatic.',
-    prereq: ['basics'],
+    prereq: ['algebra1'],
     lessons: [
       {
         id: 'transform', title: 'Functions and their graphs', minutes: 25,

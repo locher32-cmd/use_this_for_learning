@@ -1,14 +1,11 @@
-/* Module 00 — Math Basics: a gentle on-ramp before the course proper. */
+/* Basics stage, part 1: lessons on fractions, equations, powers and lines (placed into modules by 00b-basics.js). */
 (function () {
   'use strict';
   const AM = window.AM, tx = AM.tx, fmt = AM.fmt, frac = AM.frac, sgn = AM.sgn, gcd = AM.m.gcd;
   const lcm = (a, b) => (a * b) / gcd(a, b);
 
-  AM.module({
-    id: 'basics', num: 0, stage: 0, title: 'Start Here: Math Basics', aka: 'Pre-university refresher',
-    blurb: 'Before the course proper, this module rebuilds the four skills everything else leans on: working with fractions and percentages, solving an equation, using powers and roots, and reading a straight-line graph. Nothing is assumed. If a later lesson ever feels like it skipped a step, the step is probably here.',
-    prereq: [],
-    lessons: [
+  // Lessons shared with the Basics stage modules (registered in 00b-basics.js).
+  AM.basicsLessons = Object.fromEntries([
       {
         id: 'fractions', title: 'Fractions, decimals and percentages', minutes: 25,
         summary: 'Parts of a whole, and the three ways of writing the same amount.',
@@ -242,6 +239,5 @@ $$m = \frac{y_2 - y_1}{x_2 - x_1} = \frac{\text{rise}}{\text{run}}.$$
           } },
         ],
       },
-    ],
-  });
+  ].map((l) => [l.id, l]));
 })();

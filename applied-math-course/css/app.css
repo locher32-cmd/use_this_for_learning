@@ -399,3 +399,12 @@ p { margin: 0 0 0.85em; }
 .sym-table td:nth-child(2) { font-family: var(--font-ui); font-size: 0.85rem; color: var(--ink-2); }
 .sym-table td:last-child { white-space: nowrap; }
 .start-here { border: 1px solid var(--good); background: var(--good-soft); border-radius: var(--r); padding: 0.9rem 1.1rem; margin-bottom: 2rem; max-width: var(--measure); font-family: var(--font-ui); font-size: 0.95rem; }
+
+/* step-by-step working visual (Basics stage) */
+.opsteps { display: grid; gap: 6px; padding: 18px 20px; min-height: 180px; align-content: start; }
+.opstep { display: grid; grid-template-columns: 4.5rem minmax(0, auto) minmax(0, 1fr); gap: 4px 16px; align-items: baseline; padding: 6px 10px; border-radius: 6px; color: var(--muted); }
+.opstep.cur { background: var(--accent-soft, rgba(30, 90, 200, 0.08)); color: var(--ink); }
+.opstep-n { font-family: var(--font-ui); font-size: 0.72rem; letter-spacing: 0.06em; text-transform: uppercase; }
+.opstep-m { font-size: 1.2rem; color: var(--ink); white-space: nowrap; }
+.opstep-note { font-family: var(--font-body); font-size: 0.95rem; }
+@media (max-width: 560px) { .opstep { grid-template-columns: 1fr; } .opstep-m { white-space: normal; } }
