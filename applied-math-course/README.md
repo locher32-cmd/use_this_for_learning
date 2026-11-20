@@ -11,13 +11,15 @@ A self-paced course covering the mathematics of an applied math degree, from pre
 
 Study tools: **daily review** (spaced repetition), an **exam builder** (mixed, timed, graded at the end), a **progress dashboard** with mastery per module and weak spots, **lesson search**, and progress **backup/restore**.
 
+**If it feels hard:** start with Module 00, which rebuilds the basics from scratch. Every problem has **Walk me through it** (the solution one step at a time), and the **Symbol guide** explains every piece of notation in plain English.
+
 ## What's in it
 
-18 modules, 67 lessons, 268 problem generators, 67 interactive visuals.
+19 modules, 71 lessons, 284 problem generators, 69 interactive visuals.
 
 | Stage | Modules |
 |---|---|
-| 0 · Foundations | 01 Functions & Graphs · 02 Logic, Sets & Proof |
+| 0 · Foundations | **00 Start Here: Math Basics** (fractions & percentages, equations, powers & roots, straight lines) · 01 Functions & Graphs · 02 Logic, Sets & Proof |
 | 1 · Year 1 | 03 Calculus I · 04 Calculus II (incl. improper integrals, series) · 05 Linear Algebra (incl. least squares, SVD) |
 | 2 · Year 2 | 06 Multivariable Calculus · 07 Differential Equations (incl. Laplace transforms) · 08 Probability (incl. joint distributions) · 09 Statistics (incl. maximum likelihood) |
 | 3 · Upper division | 10 Real Analysis · 11 Numerical Methods · 12 Complex Analysis |
@@ -62,7 +64,7 @@ css/                    styles and bundled font faces
 js/core.js              RNG, math helpers, answer parser and checker, markdown + KaTeX rendering
 js/plot.js              canvas plotting engine and slider/controls toolkit
 js/widgets/*.js         the interactive visuals, grouped by area
-js/content/NN-*.js      the 18 modules (lessons and problem generators)
+js/content/NN-*.js      the 19 modules (lessons and problem generators)
 js/content/deeper.js    extra lessons inserted into earlier modules
 js/content/exam-*.js    Exam-level problems (4th tier) for every lesson
 js/app.js               routing, lesson pages, practice engine, review, exams, dashboard

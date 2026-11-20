@@ -20,8 +20,9 @@
 
   /* ---------- index ---------- */
   const lessons = new Map(), order = [], mods = new Map();
-  AM.modules.forEach((m, mi) => {
-    m.num = mi + 1; mods.set(m.id, m);
+  let modCounter = 0; // a module may fix its own number (the Basics on-ramp is Module 00)
+  AM.modules.forEach((m) => {
+    m.num = m.num != null ? m.num : ++modCounter; mods.set(m.id, m);
     m.lessons.forEach((l, li) => { l.fid = `${m.id}-${l.id}`; l.mod = m; l.num = li + 1; lessons.set(l.fid, l); order.push(l); });
   });
   // exam-level problems registered separately (js/content/exam-*.js) are attached as the 4th tier
@@ -139,7 +140,8 @@
     $('#side-tools').innerHTML = `
       <a href="#review" class="tool${route.page === 'review' ? ' active' : ''}">Daily review<span class="badge${due ? ' on' : ''}">${due}</span></a>
       <a href="#exam" class="tool${route.page === 'exam' ? ' active' : ''}">Exam builder</a>
-      <a href="#progress" class="tool${route.page === 'progress' ? ' active' : ''}">Progress & weak spots</a>`;
+      <a href="#progress" class="tool${route.page === 'progress' ? ' active' : ''}">Progress & weak spots</a>
+      <a href="#symbols" class="tool${route.page === 'symbols' ? ' active' : ''}">Symbol guide</a>`;
     $('#side-nav').innerHTML = STAGES.map((st) => {
       const ms = AM.modules.filter((m) => m.stage === st.n);
       if (!ms.length) return '';
@@ -153,7 +155,7 @@
   function crumbs(route) {
     const c = $('#crumbs');
     if (route.home) { c.innerHTML = '<span>Course map</span>'; return; }
-    if (route.page) { c.innerHTML = `<a href="#home">Map</a><span aria-hidden="true">/</span><span class="cur">${{ review: 'Daily review', exam: 'Exam builder', progress: 'Progress' }[route.page]}</span>`; return; }
+    if (route.page) { c.innerHTML = `<a href="#home">Map</a><span aria-hidden="true">/</span><span class="cur">${{ review: 'Daily review', exam: 'Exam builder', progress: 'Progress', symbols: 'Symbol guide' }[route.page]}</span>`; return; }
     const m = route.mod;
     c.innerHTML = `<a href="#home">Map</a><span aria-hidden="true">/</span><a href="#${m.id}">${pad(m.num)} ${m.title}</a>${route.lesson ? `<span aria-hidden="true">/</span><span class="cur">${route.lesson.title}</span>` : route.check ? '<span aria-hidden="true">/</span><span class="cur">Checkpoint</span>' : ''}`;
   }
@@ -161,7 +163,7 @@
   /* ---------- routing ---------- */
   function parseRoute() {
     const h = decodeURIComponent(location.hash.slice(1));
-    if (['review', 'exam', 'progress'].includes(h)) return { page: h };
+    if (['review', 'exam', 'progress', 'symbols'].includes(h)) return { page: h };
     if (lessons.has(h)) { const l = lessons.get(h); return { lesson: l, mod: l.mod }; }
     if (mods.has(h)) return { mod: mods.get(h) };
     if (h.endsWith('-checkpoint') && mods.has(h.slice(0, -11))) return { mod: mods.get(h.slice(0, -11)), check: true };
@@ -176,13 +178,14 @@
     else if (route.page === 'review') renderReview();
     else if (route.page === 'exam') renderExamBuilder();
     else if (route.page === 'progress') renderProgress();
+    else if (route.page === 'symbols') renderSymbols();
     else if (route.lesson) renderLesson(route.lesson);
     else if (route.check) renderCheckpoint(route.mod);
     else renderModule(route.mod);
     AM.cleanup();
     renderSide(route); crumbs(route); openSide(false);
     window.scrollTo(0, 0);
-    document.title = route.lesson ? `${route.lesson.title} · Gradient` : route.mod ? `${route.mod.title} · Gradient` : route.page ? `${{ review: 'Review', exam: 'Exam', progress: 'Progress' }[route.page]} · Gradient` : 'Gradient Applied Math';
+    document.title = route.lesson ? `${route.lesson.title} · Gradient` : route.mod ? `${route.mod.title} · Gradient` : route.page ? `${{ review: 'Review', exam: 'Exam', progress: 'Progress', symbols: 'Symbols' }[route.page]} · Gradient` : 'Gradient Applied Math';
     if (route.lesson) { S.last = route.lesson.fid; ls(route.lesson.fid).seen = 1; save(); }
   }
   window.addEventListener('hashchange', go);
@@ -218,7 +221,7 @@
         <a class="today-card${due ? ' hot' : ''}" href="#review"><span class="k">${due}</span><span class="t">lesson${due === 1 ? '' : 's'} due for review</span><span class="s">${due ? 'Spaced review keeps old topics fresh. About 2 minutes each.' : 'Nothing due. Solve more lessons to schedule reviews.'}</span></a>
         <a class="today-card" href="#progress"><span class="k">${streak()}</span><span class="t">day streak</span><span class="s">${Math.round(100 * order.reduce((a, l) => a + mastery(l.fid), 0) / order.length)}% average mastery across the course.</span></a>
         <a class="today-card" href="${weak.length ? '#' + weak[0].l.fid : '#exam'}"><span class="k">${weak.length || '✓'}</span><span class="t">${weak.length ? 'weak spot' + (weak.length > 1 ? 's' : '') : 'no weak spots yet'}</span><span class="s">${weak.length ? `Weakest: ${esc(weak[0].l.title)} (${Math.round(weak[0].acc * 100)}% correct).` : 'Try a mixed exam to find them.'}</span></a>
-      </div></section>` : ''}
+      </div></section>` : mods.has('basics') ? `<p class="start-here"><b>New to this, or rusty?</b> Begin with <a href="#basics">Module 00: Math Basics</a>. It rebuilds fractions, equations, powers and graphs from scratch, gently, before anything else. Stuck on a problem anywhere? Press <b>Walk me through it</b> to see one step at a time, and use the <a href="#symbols">symbol guide</a> for any notation you don't recognise.</p>` : ''}
       <section class="method" aria-labelledby="method-h">
         <h2 id="method-h" class="section-h">How every lesson runs</h2>
         <ol class="method-steps">
@@ -334,7 +337,7 @@
       view.appendChild(section('visual', fig, 'visual'));
       mountVisual(host, l);
     }
-    view.appendChild(section('math', `<div class="mathbox">${md(l.math)}</div>`));
+    view.appendChild(section('math', `<div class="mathbox">${md(l.math)}</div><p class="sym-note">A symbol you don't recognise? The <a href="#symbols">symbol guide</a> explains every one in plain English.</p>`));
     if (l.example) view.appendChild(section('example', workedExample(l)));
     if (l.pitfalls && l.pitfalls.length) view.appendChild(section('pitfalls', `<ul class="pitfalls">${l.pitfalls.map((p) => `<li>${mdi(p)}</li>`).join('')}</ul>`));
 
@@ -401,7 +404,18 @@
       hint.hidden = true; hint.innerHTML = prob.hint ? `<b>Hint.</b> ${mdi(prob.hint)}` : '';
       sol.hidden = true;
       const steps = Array.isArray(prob.sol) ? prob.sol : prob.sol ? [prob.sol] : [];
-      sol.innerHTML = `<p class="psol-h">Solution</p><ol>${steps.map((s) => `<li>${md(s)}</li>`).join('')}</ol><p class="psol-ans"><b>Answer:</b> ${mdi(AM.answerTex(prob.ans))}</p>`;
+      // "Walk me through it": steps appear one at a time so you can try each next step yourself
+      sol.innerHTML = `<p class="psol-h">Step by step</p><ol>${steps.map((s, i) => `<li${i ? ' hidden' : ''}>${md(s)}</li>`).join('')}</ol><p class="psol-ans" hidden><b>Answer:</b> ${mdi(AM.answerTex(prob.ans))}</p><p class="psol-nav"><button class="btn btn-sm" type="button" data-step="next">Next step</button> <button class="btn btn-sm btn-ghost" type="button" data-step="all">Show everything</button></p>`;
+      const showAll = () => { sol.querySelectorAll('li, .psol-ans').forEach((x) => { x.hidden = false; }); const nav = sol.querySelector('.psol-nav'); if (nav) nav.hidden = true; };
+      sol.showAll = showAll;
+      sol.querySelector('.psol-nav').addEventListener('click', (e) => {
+        const b = e.target.closest('button[data-step]'); if (!b) return;
+        if (b.dataset.step === 'all') { showAll(); return; }
+        const next = sol.querySelector('li[hidden]');
+        if (next) next.hidden = false;
+        if (!sol.querySelector('li[hidden]')) showAll();
+      });
+      if (steps.length <= 1) showAll();
       buildForm();
     }
     function buildForm() {
@@ -425,7 +439,7 @@
       const row = el('div', 'pactions');
       row.innerHTML = `<button class="btn btn-primary btn-sm" type="submit" id="${cid}-check">Check</button>
         ${prob.hint ? `<button class="btn btn-sm btn-ghost" type="button" data-act="hint" id="${cid}-hint">Hint</button>` : ''}
-        <button class="btn btn-sm btn-ghost" type="button" data-act="sol" id="${cid}-sol">Show solution</button>
+        <button class="btn btn-sm btn-ghost" type="button" data-act="sol" id="${cid}-sol">Walk me through it</button>
         ${opts.noNew ? '' : `<button class="btn btn-sm btn-ghost" type="button" data-act="new" id="${cid}-new">New problem</button>`}`;
       form.appendChild(row);
     }
@@ -445,7 +459,7 @@
       } else {
         attempts++;
         fb.className = 'pfeedback bad';
-        fb.textContent = `Not quite.${res.msg ? ' ' + res.msg : ''}${attempts >= 2 ? (prob.hint && hint.hidden ? ' Open the hint for a nudge.' : ' Open the solution to see the method, then try a new problem.') : ' Try again.'}`;
+        fb.textContent = `Not quite.${res.msg ? ' ' + res.msg : ''}${attempts >= 2 ? (prob.hint && hint.hidden ? ' Open the hint for a nudge.' : ` Press "Walk me through it" to see one step at a time, then try a new problem.${lvl > 1 ? ' Or solve the easier level above first.' : ''}`) : ' Try again.'}`;
         if (attempts === 1) onResult && onResult(false, revealed);
       }
     });
@@ -453,7 +467,7 @@
       const b = e.target.closest('button[data-act]'); if (!b) return;
       const act = b.dataset.act;
       if (act === 'hint') hint.hidden = !hint.hidden;
-      if (act === 'sol') { sol.hidden = !sol.hidden; if (!sol.hidden) revealed = true; b.textContent = sol.hidden ? 'Show solution' : 'Hide solution'; }
+      if (act === 'sol') { sol.hidden = !sol.hidden; if (!sol.hidden) revealed = true; b.textContent = sol.hidden ? 'Walk me through it' : 'Hide steps'; }
       if (act === 'new') { seed = (seed * 1103515245 + 12345) & 0x7fffffff; load(); }
     });
     load();
@@ -464,7 +478,7 @@
       card.classList.add(res.ok ? 'is-solved' : 'is-wrong');
       status.textContent = res.ok ? 'Correct' : 'Incorrect'; status.classList.toggle('bad', !res.ok);
       fb.className = 'pfeedback ' + (res.ok ? 'good' : 'bad'); fb.textContent = res.ok ? 'Correct.' : `Incorrect.${res.msg ? ' ' + res.msg : ''} The worked solution is below.`;
-      if (!res.ok) sol.hidden = false;
+      if (!res.ok) { sol.hidden = false; if (sol.showAll) sol.showAll(); }
       return res.ok;
     };
     return card;
@@ -589,6 +603,89 @@
       const tick = () => { const s = Math.max(0, Math.round((end - Date.now()) / 1000)); t.innerHTML = `Time left <b>${Math.floor(s / 60)}:${pad(s % 60)}</b>`; if (!s) finish(); };
       tick(); timer = setInterval(tick, 1000);
     }
+  }
+
+  /* ---------- symbol guide ---------- */
+  const SYMBOLS = [
+    ['Everyday', [
+      ['=,\\ \\ne', 'equals, not equal', 'The two sides are (or are not) the same number.', '2 + 2 = 4,\\ 3 \\ne 5'],
+      ['\\approx', 'approximately', 'Close enough for practical purposes.', '\\pi \\approx 3.14'],
+      ['<,\\ \\le,\\ >,\\ \\ge', 'less than (or equal), greater than (or equal)', 'Compare sizes. The bar underneath means "or equal".', 'x \\le 3 \\text{ includes } 3'],
+      ['|x|', 'absolute value', 'Distance from zero: drop the minus sign.', '|-5| = 5'],
+      ['x^2,\\ x^n', 'power', 'Multiply $x$ by itself $n$ times.', '2^3 = 2\\cdot2\\cdot2 = 8'],
+      ['\\sqrt{x},\\ \\sqrt[n]{x}', 'square root, $n$-th root', 'The number that, squared (or raised to $n$), gives $x$.', '\\sqrt{9} = 3,\\ \\sqrt[3]{8} = 2'],
+      ['\\pi', 'pi', 'Circumference ÷ diameter of any circle, about 3.14159.', 'C = 2\\pi r'],
+      ['e', "Euler's number", 'About 2.71828, the natural base for growth.', 'e^x'],
+      ['\\infty', 'infinity', 'Grows without bound. Not a number you can calculate with.', 'x \\to \\infty'],
+      ['\\pm', 'plus or minus', 'Two answers: one with +, one with −.', 'x = \\pm 3'],
+    ]],
+    ['Functions and algebra', [
+      ['f(x)', 'f of x', 'The output of the rule $f$ when the input is $x$.', 'f(x) = x^2 \\Rightarrow f(3) = 9'],
+      ['f^{-1}', 'inverse of f', 'The rule that undoes $f$. (Not $1/f$!)', 'f(x) = 2x \\Rightarrow f^{-1}(x) = x/2'],
+      ['f\\circ g', 'f composed with g', 'Do $g$ first, then $f$.', '(f\\circ g)(x) = f(g(x))'],
+      ['\\log_b x,\\ \\ln x', 'logarithm, natural log', '"What power of $b$ gives $x$?" $\\ln$ uses base $e$.', '\\log_2 8 = 3'],
+      ['\\sum_{i=1}^{n}', 'sum (sigma)', 'Add up the expression for $i = 1, 2, \\dots, n$.', '\\sum_{i=1}^{3} i = 1 + 2 + 3'],
+      ['\\prod', 'product (pi)', 'Multiply the terms together.', '\\prod_{i=1}^{3} i = 6'],
+      ['n!', 'factorial', 'Multiply $n \\times (n-1) \\times \\cdots \\times 1$.', '4! = 24'],
+      ['\\binom{n}{k}', 'n choose k', 'Number of ways to pick $k$ things from $n$, order not mattering.', '\\binom{4}{2} = 6'],
+    ]],
+    ['Sets and logic', [
+      ['\\in,\\ \\notin', 'is in, is not in', 'Membership of a set.', '3 \\in \\{1,2,3\\}'],
+      ['\\subseteq', 'subset', 'Everything in the left set is also in the right one.', '\\{1\\} \\subseteq \\{1,2\\}'],
+      ['\\cup,\\ \\cap', 'union, intersection', '"Or" (either set) and "and" (both sets).', '\\{1,2\\}\\cap\\{2,3\\} = \\{2\\}'],
+      ['\\emptyset', 'empty set', 'The set with nothing in it.', '\\{1\\}\\cap\\{2\\} = \\emptyset'],
+      ['\\R,\\ \\N,\\ \\Z,\\ \\Q,\\ \\C', 'number sets', 'Real numbers, natural numbers (1, 2, 3, …), integers, fractions, complex numbers.', '\\sqrt2 \\in \\R'],
+      ['\\forall,\\ \\exists', 'for all, there exists', '"Every single one" and "at least one".', '\\forall x\\ \\exists y: y > x'],
+      ['\\Rightarrow,\\ \\Leftrightarrow', 'implies, if and only if', '"If this, then that" and "these say the same thing".', 'x = 2 \\Rightarrow x^2 = 4'],
+      ['\\land,\\ \\lor,\\ \\lnot', 'and, or, not', 'Logical connectives.', 'P \\land \\lnot Q'],
+      ['f: A \\to B', 'f maps A to B', '$f$ takes inputs from set $A$ and gives outputs in set $B$.', 'f:\\R\\to\\R'],
+    ]],
+    ['Calculus', [
+      ['\\lim_{x\\to a}', 'limit', 'The value $f(x)$ approaches as $x$ gets close to $a$.', '\\lim_{x\\to0}\\frac{\\sin x}{x} = 1'],
+      ["f'(x),\\ \\frac{dy}{dx}", 'derivative', 'Rate of change: how fast the output changes per unit of input. The slope.', '\\frac{d}{dx}x^2 = 2x'],
+      ["f''(x)", 'second derivative', 'Rate of change of the rate of change (e.g. acceleration).', '(x^3)\'\' = 6x'],
+      ['\\Delta x', 'delta x', 'A small (but not infinitely small) change in $x$.', '\\Delta x = x_2 - x_1'],
+      ['\\int_a^b f(x)\\,dx', 'definite integral', 'Total accumulated amount (area under the curve) from $a$ to $b$.', '\\int_0^1 x\\,dx = \\tfrac12'],
+      ['\\int f(x)\\,dx', 'antiderivative', 'A function whose derivative is $f$ (plus any constant $C$).', '\\int 2x\\,dx = x^2 + C'],
+      ['\\frac{\\partial f}{\\partial x}', 'partial derivative', 'Rate of change in $x$ while holding the other variables fixed.', '\\frac{\\partial}{\\partial x}(xy) = y'],
+      ['\\nabla f', 'gradient (nabla)', 'Vector of all partial derivatives; points uphill.', '\\nabla(x^2 + y^2) = (2x, 2y)'],
+      ['\\iint_R', 'double integral', 'Add up over a 2D region (volume, mass, probability).', '\\iint_R 1\\,dA = \\text{area of } R'],
+      ['\\oint_C', 'loop integral', 'Integral around a closed curve.', '\\oint_C \\mathbf F\\cdot d\\mathbf r'],
+      ['\\dot x', 'x dot', 'Derivative with respect to time.', '\\dot x = v'],
+    ]],
+    ['Vectors and matrices', [
+      ['\\mathbf v,\\ \\vec v', 'vector', 'A list of numbers / an arrow with size and direction.', '\\mathbf v = (3, 4)'],
+      ['\\|\\mathbf v\\|', 'norm (length)', 'Length of the vector.', '\\|(3,4)\\| = 5'],
+      ['\\mathbf u\\cdot\\mathbf v', 'dot product', 'Multiply matching entries and add: measures alignment.', '(1,2)\\cdot(3,4) = 11'],
+      ['A^T', 'transpose', 'Flip a matrix over its diagonal: rows become columns.', '\\begin{pmatrix}1&2\\end{pmatrix}^T = \\begin{pmatrix}1\\\\2\\end{pmatrix}'],
+      ['A^{-1}', 'inverse matrix', 'The matrix that undoes $A$: $A^{-1}A = I$.', 'AA^{-1} = I'],
+      ['I', 'identity matrix', 'The matrix that changes nothing (1s on the diagonal).', 'I\\mathbf x = \\mathbf x'],
+      ['\\det A', 'determinant', 'How much $A$ scales areas; 0 means not invertible.', '\\det\\begin{pmatrix}a&b\\\\c&d\\end{pmatrix} = ad - bc'],
+      ['\\lambda', 'lambda (eigenvalue)', 'Stretch factor along a special direction: $A\\mathbf v = \\lambda\\mathbf v$.', '\\lambda = 3'],
+    ]],
+    ['Probability and statistics', [
+      ['P(A)', 'probability of A', 'How likely event $A$ is, from 0 (never) to 1 (certain).', 'P(\\text{heads}) = \\tfrac12'],
+      ['P(A\\mid B)', 'probability of A given B', 'Probability of $A$ once you know $B$ happened.', 'P(\\text{rain}\\mid\\text{clouds})'],
+      ['E[X],\\ \\mu', 'expected value, mean', 'The long-run average value.', 'E[\\text{die}] = 3.5'],
+      ['\\operatorname{Var}(X),\\ \\sigma^2', 'variance', 'Average squared distance from the mean: spread.', '\\sigma = \\sqrt{\\operatorname{Var}}'],
+      ['\\sigma', 'sigma (standard deviation)', 'Typical distance from the mean, in the same units as the data.', '\\mu \\pm 2\\sigma'],
+      ['X \\sim N(\\mu, \\sigma^2)', 'is distributed as', '$X$ follows this distribution (here: normal).', 'Z\\sim N(0,1)'],
+      ['\\bar x,\\ \\hat p', 'x bar, p hat', 'Estimates calculated from a sample.', '\\bar x = \\tfrac1n\\sum x_i'],
+      ['\\Phi(z)', 'normal CDF', 'Probability a standard normal is at most $z$.', '\\Phi(1.96) \\approx 0.975'],
+    ]],
+    ['Greek letters you will meet', [
+      ['\\alpha,\\ \\beta,\\ \\gamma', 'alpha, beta, gamma', 'Often angles, rates or parameters.', '\\alpha = 0.05'],
+      ['\\delta,\\ \\varepsilon', 'delta, epsilon', 'Tiny positive amounts (tolerances) in analysis.', '|x - a| < \\delta'],
+      ['\\theta,\\ \\phi', 'theta, phi', 'Angles, or unknown parameters.', '\\cos\\theta'],
+      ['\\lambda,\\ \\mu', 'lambda, mu', 'Rates, eigenvalues, means.', '\\text{Poisson}(\\lambda)'],
+      ['\\omega', 'omega', 'Angular frequency (how fast something oscillates).', '\\sin(\\omega t)'],
+      ['\\rho,\\ \\kappa,\\ \\tau', 'rho, kappa, tau', 'Correlation or density; condition number or diffusivity; time constants.', '\\rho = 0.8'],
+    ]],
+  ];
+  function renderSymbols() {
+    view.innerHTML = `<header class="page-head"><p class="eyebrow">Reference</p><h1>Symbol guide</h1>
+      <div class="lede"><p>Math notation is a language of abbreviations. Every symbol used in this course is listed here with its name (so you can say it out loud), what it means in plain English, and a small example.</p></div></header>
+      ${SYMBOLS.map(([group, rows]) => `<section class="lsec" style="max-width:none"><h2 class="lsec-h">${group}</h2><div class="viz-scroll" style="padding:0"><table class="viz-table sym-table"><thead><tr><th>Symbol</th><th>Say it as</th><th>Means</th><th>Example</th></tr></thead><tbody>${rows.map(([s, name, mean, ex]) => `<tr><td>${AM.tex(s)}</td><td>${mdi(name)}</td><td>${mdi(mean)}</td><td>${AM.tex(ex)}</td></tr>`).join('')}</tbody></table></div></section>`).join('')}`;
   }
 
   /* Downloads are blocked inside sandboxed frames (e.g. an embedded preview); allow them everywhere else. */

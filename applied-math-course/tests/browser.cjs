@@ -79,7 +79,7 @@ const { chromium } = require('playwright');
     if (solved !== '4/4') errors.push(`expected 4/4 practice levels solved through the UI, got ${solved}`);
     const st = await page.evaluate((h) => { const S = window.AM.app.state; return { tiers: S.lessons[h].tiers.join(''), srs: !!S.srs[h] }; }, fid);
     if (st.tiers !== '1111' || !st.srs) errors.push(`lesson progress not recorded: ${JSON.stringify(st)}`);
-    for (const r of ['review', 'progress', 'exam']) {
+    for (const r of ['symbols', 'review', 'progress', 'exam']) {
       await page.evaluate((h) => { location.hash = h; }, r); await page.waitForTimeout(150);
       const bad = await page.$$eval('#view .err', (els) => els.map((e) => e.textContent)); bad.forEach((b) => errors.push(`visible error @ ${r}: ${b}`));
     }
