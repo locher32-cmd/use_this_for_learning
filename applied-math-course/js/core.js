@@ -64,6 +64,19 @@
     return (s * h) / 3;
   };
   M.deriv = (f, x, h = 1e-5) => (f(x + h) - f(x - h)) / (2 * h);
+  /* ODE steppers for y' = f(t, y) with y an array */
+  const axpy = (y, k, h) => y.map((v, i) => v + h * k[i]);
+  M.eulerStep = (f, t, y, h) => axpy(y, f(t, y), h);
+  M.rk4Step = (f, t, y, h) => {
+    const k1 = f(t, y), k2 = f(t + h / 2, axpy(y, k1, h / 2)), k3 = f(t + h / 2, axpy(y, k2, h / 2)), k4 = f(t + h, axpy(y, k3, h));
+    return y.map((v, i) => v + (h / 6) * (k1[i] + 2 * k2[i] + 2 * k3[i] + k4[i]));
+  };
+  /* Integrate from t0 to t1 in n steps; returns [[t, y], ...] */
+  M.solve = (f, y0, t0, t1, n, step = M.rk4Step) => {
+    const h = (t1 - t0) / n, out = [[t0, y0]]; let y = y0;
+    for (let i = 1; i <= n; i++) { y = step(f, t0 + (i - 1) * h, y, h); out.push([t0 + i * h, y]); }
+    return out;
+  };
 
   /* Self-checks that generators attach as `verify` (run by the test suite, never shown to learners). */
   AM.checks = {
