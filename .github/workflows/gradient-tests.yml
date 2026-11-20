@@ -21,4 +21,5 @@ jobs:
       - run: node tests/run.mjs
       - run: node tests/browser.cjs
       - run: node tests/install.cjs
+      - run: node tools/bundle.mjs && node tests/bundle.cjs
       - run: xvfb-run -a node tests/desktop.cjs

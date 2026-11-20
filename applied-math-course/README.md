@@ -26,7 +26,9 @@ Study tools: **daily review** (spaced repetition), an **exam builder** (mixed, t
 
 ## Ways to run it
 
-**Quickest:** open `index.html` in any browser. Everything (math typesetting, fonts, visuals) is bundled, so it works offline. Progress is saved in that browser.
+**Save it to your device (one file):** download [`Gradient.html`](Gradient.html) (about 2 MB) and keep it anywhere: your laptop, a USB stick, cloud storage. Double-click it to open in your browser. Everything (lessons, visuals, math fonts) is inside that one file, so it works with no internet. On the Progress page, **Save backup file** downloads your progress as a `.json` file, and **Load backup file** restores it, so you can move progress between devices. Rebuild the file after changes with `node tools/bundle.mjs`.
+
+**From the project folder:** open `index.html` in any browser; it also works offline. Progress is saved in that browser.
 
 **Install as an app (web):** serve it over http and install from the browser.
 ```bash
@@ -83,5 +85,6 @@ node tests/run.mjs                 # every generator × 300 seeds: answers accep
 node tests/browser.cjs             # every page in a real browser, every control operated, a lesson solved end to end, an exam taken
 node tests/install.cjs             # manifest, icons, offline cache, and an offline reload over http
 xvfb-run -a node tests/desktop.cjs # launches the Electron app (needs npm install)
+node tests/bundle.cjs              # Gradient.html offline with the network blocked, plus backup save/restore
 ```
 Run `node tools/build.mjs` after adding or renaming files so the offline cache stays complete (`tests/install.cjs` checks this).

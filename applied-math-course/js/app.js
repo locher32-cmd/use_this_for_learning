@@ -201,6 +201,7 @@
           <div class="hero-actions">
             <a class="btn btn-primary" href="#${nx.fid}">${started ? 'Continue' : 'Start lesson 1'}</a>
             <span class="hero-next">${started ? 'Up next: ' : ''}<b>${nx.mod.title}</b> · ${nx.title}</span>
+            ${canDownload() && /^https?:$/.test(location.protocol) ? '<a class="btn" href="Gradient.html" download id="save-offline">Save to this device</a>' : ''}
           </div>
           <dl class="hero-stats">
             <div><dt>Modules</dt><dd>${AM.modules.length}</dd></div>
@@ -590,6 +591,9 @@
     }
   }
 
+  /* Downloads are blocked inside sandboxed frames (e.g. an embedded preview); allow them everywhere else. */
+  function canDownload() { if (window.desktop) return false; try { return window.top === window.self; } catch (e) { return false; } }
+
   /* ---------- progress dashboard ---------- */
   function renderProgress() {
     const avg = order.reduce((a, l) => a + mastery(l.fid), 0) / order.length, exSolved = order.filter((l) => S.lessons[l.fid] && S.lessons[l.fid].tiers[3]).length;
@@ -613,13 +617,22 @@
       <section class="lsec"><h2 class="lsec-h">Back up or move your progress</h2>
         <p class="practice-note">Copy this text somewhere safe, or paste a previous backup and press Load.${window.desktop ? ' In the desktop app you can also use File → Export progress.' : ''}</p>
         <label for="pg-data" class="sr">Progress data</label><textarea id="pg-data" class="pin datafield" rows="4" spellcheck="false">${esc(JSON.stringify(S))}</textarea>
-        <p class="cp-again"><button class="btn btn-sm" type="button" id="pg-copy">Copy</button><button class="btn btn-sm" type="button" id="pg-load">Load pasted backup</button>${window.desktop ? '<button class="btn btn-sm" type="button" id="pg-save">Save to file…</button><button class="btn btn-sm" type="button" id="pg-open">Open file…</button>' : ''}<button class="btn btn-sm btn-ghost" type="button" id="pg-reset">Reset all progress</button></p>
+        <p class="cp-again">${canDownload() ? '<button class="btn btn-sm btn-primary" type="button" id="pg-dl">Save backup file</button><label class="btn btn-sm" for="pg-file">Load backup file</label><input type="file" id="pg-file" accept=".json,application/json" hidden>' : ''}<button class="btn btn-sm" type="button" id="pg-copy">Copy</button><button class="btn btn-sm" type="button" id="pg-load">Load pasted backup</button>${window.desktop ? '<button class="btn btn-sm" type="button" id="pg-save">Save to file…</button><button class="btn btn-sm" type="button" id="pg-open">Open file…</button>' : ''}<button class="btn btn-sm btn-ghost" type="button" id="pg-reset">Reset all progress</button></p>
         <p class="pfeedback" id="pg-msg" aria-live="polite"></p>
       </section>`;
     const msg = $('#pg-msg'), ta = $('#pg-data');
     $('#pg-copy').addEventListener('click', () => { const p = navigator.clipboard ? navigator.clipboard.writeText(ta.value) : Promise.reject(); p.then(() => { msg.className = 'pfeedback good'; msg.textContent = 'Copied.'; }, () => { ta.select(); msg.className = 'pfeedback warn'; msg.textContent = 'Selected: press Ctrl+C or ⌘C to copy.'; }); });
     const loadJSON = (txt) => { try { const d = JSON.parse(txt); if (!d || typeof d !== 'object' || !d.lessons) throw new Error('missing lesson data'); Object.keys(S).forEach((k) => delete S[k]); Object.assign(S, d); AM.store.save(S); location.hash = '#progress'; go(); $('#pg-msg').className = 'pfeedback good'; $('#pg-msg').textContent = 'Progress loaded.'; } catch (e) { msg.className = 'pfeedback bad'; msg.textContent = `That isn't a valid backup (${e.message}).`; } };
     $('#pg-load').addEventListener('click', () => loadJSON(ta.value));
+    if (canDownload()) {
+      $('#pg-dl').addEventListener('click', () => {
+        const url = URL.createObjectURL(new Blob([JSON.stringify(S, null, 1)], { type: 'application/json' })), a = document.createElement('a');
+        a.href = url; a.download = `gradient-progress-${today()}.json`; document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 2000);
+        msg.className = 'pfeedback good'; msg.textContent = 'Backup saved to your downloads.';
+      });
+      $('#pg-file').addEventListener('change', (e) => { const f = e.target.files[0]; if (!f) return; const r = new FileReader(); r.onload = () => loadJSON(String(r.result)); r.readAsText(f); });
+    }
     let armed = false;
     $('#pg-reset').addEventListener('click', (e) => { if (!armed) { armed = true; e.target.textContent = 'Press again to erase everything'; return; } Object.keys(S).forEach((k) => delete S[k]); ['lessons', 'checks', 'stats', 'srs', 'days'].forEach((k) => { S[k] = {}; }); S.exams = []; save(); go(); });
     if (window.desktop) {
