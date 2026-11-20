@@ -1,0 +1,24 @@
+# Runs the Gradient content tests and browser smoke tests on every change to the course.
+name: Gradient tests
+on:
+  push:
+    paths: ['applied-math-course/**']
+  pull_request:
+    paths: ['applied-math-course/**']
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: applied-math-course
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: node tests/run.mjs
+      - run: node tests/browser.cjs
+      - run: node tests/install.cjs
+      - run: xvfb-run -a node tests/desktop.cjs

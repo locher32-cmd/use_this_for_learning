@@ -1,0 +1,67 @@
+{
+  "name": "gradient-applied-math",
+  "productName": "Gradient",
+  "version": "1.0.0",
+  "description": "A self-paced applied mathematics course with interactive visuals and practice from warm-up to exam level.",
+  "main": "desktop/main.js",
+  "private": true,
+  "license": "UNLICENSED",
+  "scripts": {
+    "start": "electron .",
+    "serve": "node tools/serve.mjs",
+    "build": "node tools/build.mjs",
+    "test": "node tests/run.mjs",
+    "test:browser": "node tests/browser.cjs",
+    "dist": "node tools/build.mjs && electron-builder",
+    "dist:mac": "node tools/build.mjs && electron-builder --mac",
+    "dist:win": "node tools/build.mjs && electron-builder --win",
+    "dist:linux": "node tools/build.mjs && electron-builder --linux"
+  },
+  "devDependencies": {
+    "electron": "33.2.1",
+    "electron-builder": "25.1.8",
+    "playwright": "1.63.0"
+  },
+  "build": {
+    "appId": "app.gradient.appliedmath",
+    "productName": "Gradient",
+    "files": [
+      "index.html",
+      "manifest.webmanifest",
+      "sw.js",
+      "css/**",
+      "js/**",
+      "vendor/**",
+      "icons/**",
+      "desktop/**",
+      "package.json"
+    ],
+    "directories": {
+      "output": "release"
+    },
+    "icon": "icons/icon-512.png",
+    "mac": {
+      "category": "public.app-category.education",
+      "target": [
+        "dmg"
+      ]
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Education"
+    },
+    "publish": null
+  }
+}

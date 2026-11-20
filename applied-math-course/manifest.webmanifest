@@ -1,0 +1,23 @@
+{
+  "name": "Gradient Applied Math",
+  "short_name": "Gradient",
+  "description": "A self-paced applied mathematics course: plain-English lessons, interactive visuals, and practice from warm-up to exam level.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0a1828",
+  "theme_color": "#0f2134",
+  "categories": ["education"],
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ],
+  "shortcuts": [
+    { "name": "Daily review", "url": "./index.html#review" },
+    { "name": "Exam builder", "url": "./index.html#exam" },
+    { "name": "Progress", "url": "./index.html#progress" }
+  ]
+}

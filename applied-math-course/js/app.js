@@ -34,7 +34,11 @@
   ['lessons', 'checks', 'stats', 'srs', 'days'].forEach((k) => { S[k] = S[k] || {}; });
   S.exams = S.exams || [];
   Object.values(S.lessons).forEach((v) => { while (v.tiers.length < 4) v.tiers.push(0); });
-  const save = () => AM.store.save(S);
+  const save = () => {
+    AM.store.save(S);
+    // desktop app: keep a dated backup file once a day
+    if (window.desktop && window.desktop.autoBackup && S.lastBackup !== today()) { S.lastBackup = today(); AM.store.save(S); window.desktop.autoBackup(JSON.stringify(S)).catch(() => {}); }
+  };
   const ls = (fid) => (S.lessons[fid] = S.lessons[fid] || { tiers: [0, 0, 0, 0] });
   const done = (fid) => { const t = S.lessons[fid] && S.lessons[fid].tiers; return !!t && t[0] && t[1] && t[2]; };
   const tiersDone = (fid) => (S.lessons[fid] ? S.lessons[fid].tiers.filter(Boolean).length : 0);
