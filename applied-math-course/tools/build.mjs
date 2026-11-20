@@ -44,7 +44,8 @@ const fragment = html
   .replace(/<!doctype html>\s*/i, '')
   .replace(/<\/?(html|head|body)[^>]*>\s*/gi, '')
   .replace(/<meta charset[^>]*>\s*/i, '')
-  .replace(/<meta name="viewport"[^>]*>\s*/i, '');
+  .replace(/<meta name="viewport"[^>]*>\s*/i, '')
+  .replace(/<meta http-equiv="Content-Security-Policy"[^>]*>\s*/i, ''); // the hosting page sets its own policy
 fs.mkdirSync(path.join(root, 'dist'), { recursive: true });
 fs.writeFileSync(path.join(root, 'dist', 'artifact.html'), fragment);
 console.log(`sw.js: ${assets.length} files, cache version ${version}`);
