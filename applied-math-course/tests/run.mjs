@@ -53,7 +53,7 @@ for (const m of AM.modules) {
     if (l.example) { render(`${where} example`, l.example.problem); (l.example.steps || []).forEach((s, i) => render(`${where} example step ${i + 1}`, s)); if (!l.example.steps || !l.example.steps.length) fail(where, 'example has no steps'); }
     (l.pitfalls || []).forEach((p, i) => render(`${where} pitfall ${i + 1}`, p));
     const levels = (l.practice || []).map((p) => p.level).join(',');
-    if (levels !== '1,2,3') fail(where, `practice levels should be 1,2,3 (got ${levels})`);
+    if (levels !== '1,2,3,4') fail(where, `practice levels should be 1,2,3,4 (got ${levels})`);
     (l.practice || []).forEach((item, pi) => {
       nGens++;
       const w = `${where} L${item.level}`;

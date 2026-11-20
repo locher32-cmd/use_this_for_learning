@@ -324,3 +324,69 @@ p { margin: 0 0 0.85em; }
 .pg b { font-family: var(--font-display); font-size: 1rem; }
 .pg.next { text-align: right; }
 @media (max-width: 520px) { .pager { grid-template-columns: 1fr; } }
+
+/* ---------- study tools: sidebar links, search ---------- */
+.side-tools { display: grid; gap: 2px; margin-bottom: 0.9rem; }
+.side-tools .tool { display: flex; justify-content: space-between; align-items: center; padding: 0.42rem 0.55rem; border-radius: 5px; font-size: 0.88rem; font-weight: 600; color: var(--ink); text-decoration: none; }
+.side-tools .tool:hover, .side-tools .tool.active { background: var(--panel); }
+.side-tools .tool.active { box-shadow: inset 2px 0 0 var(--accent); }
+.badge { font-family: var(--font-mono); font-size: 0.72rem; min-width: 1.5rem; text-align: center; padding: 0.05rem 0.4rem; border-radius: 99px; background: var(--rule); color: var(--muted); }
+.badge.on { background: var(--hi); color: var(--accent-ink); }
+.side-search { position: relative; margin-bottom: 1rem; }
+.side-search input { width: 100%; font: inherit; font-size: 0.86rem; padding: 0.45rem 0.6rem; border: 1px solid var(--rule); border-radius: 5px; background: var(--panel); color: var(--ink); }
+.side-results { position: absolute; left: 0; right: 0; top: calc(100% + 4px); z-index: 5; background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12); max-height: 50vh; overflow-y: auto; }
+.side-results a { display: flex; flex-direction: column; padding: 0.5rem 0.65rem; text-decoration: none; color: var(--ink); border-bottom: 1px solid var(--rule); font-size: 0.85rem; }
+.side-results a:last-child { border-bottom: 0; }
+.side-results a:hover { background: var(--accent-soft); }
+.side-results span { font-size: 0.75rem; color: var(--muted); }
+.side-results p { padding: 0.6rem; margin: 0; font-size: 0.85rem; color: var(--muted); }
+
+/* ---------- today / dashboard ---------- */
+.today { margin-bottom: 3rem; }
+.today-grid, .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)); gap: 0.9rem; }
+.today-card, .kpis > div { display: flex; flex-direction: column; gap: 0.15rem; padding: 1rem 1.1rem; border: 1px solid var(--rule); border-radius: var(--r); background: var(--panel); color: var(--ink); text-decoration: none; font-family: var(--font-ui); }
+.today-card:hover { border-color: var(--accent); }
+.today-card.hot { border-color: var(--hi); background: var(--hi-soft); }
+.today-card .k, .kpis .k { font-family: var(--font-mono); font-size: 1.8rem; font-weight: 500; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.kpis .k small { font-size: 0.9rem; color: var(--muted); }
+.today-card .t, .kpis .t { font-weight: 600; font-size: 0.9rem; }
+.today-card .s { font-size: 0.8rem; color: var(--muted); line-height: 1.4; }
+.kpis { margin-bottom: 2.4rem; grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr)); }
+.mastery { display: grid; gap: 0.25rem; max-width: 52rem; }
+.mastery .side-stage-label { margin: 0.8rem 0 0.2rem; }
+.mrow { display: grid; grid-template-columns: minmax(0, 15rem) minmax(0, 1fr) 3rem; gap: 0.8rem; align-items: center; padding: 0.3rem 0.2rem; text-decoration: none; color: var(--ink); font-family: var(--font-ui); font-size: 0.88rem; border-radius: 4px; }
+.mrow:hover { background: var(--panel); }
+.mname { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mbar { height: 10px; background: var(--rule); border-radius: 3px; overflow: hidden; }
+.mbar > span { display: block; height: 100%; border-radius: 3px; background: var(--accent); }
+.mbar > span.lo { background: var(--bad); } .mbar > span.mid { background: var(--hi); } .mbar > span.hi { background: var(--good); }
+.mval { font-family: var(--font-mono); font-size: 0.8rem; text-align: right; font-variant-numeric: tabular-nums; }
+@media (max-width: 560px) { .mrow { grid-template-columns: minmax(0, 1fr) 3rem; } .mbar { grid-column: 1 / -1; grid-row: 2; } }
+.weak { list-style: none; padding: 0 !important; display: grid; gap: 0.4rem; }
+.weak a { display: flex; flex-direction: column; padding: 0.6rem 0.8rem; border: 1px solid var(--rule); border-left: 3px solid var(--bad); border-radius: 5px; text-decoration: none; color: var(--ink); background: var(--panel); }
+.weak span { font-family: var(--font-ui); font-size: 0.8rem; color: var(--muted); }
+.datafield { width: 100%; font-size: 0.75rem; resize: vertical; }
+.empty { max-width: var(--measure); padding: 1.5rem; border: 1px dashed var(--rule); border-radius: var(--r); }
+.empty h2 { font-size: 1.2rem; margin-bottom: 0.5rem; }
+.hist td, .hist th { white-space: nowrap; }
+
+/* ---------- exams ---------- */
+.exam-form { display: flex; flex-wrap: wrap; gap: 1rem 1.4rem; align-items: flex-end; padding: 1.1rem 1.2rem; border: 1px solid var(--rule); border-radius: var(--r); background: var(--sunk); max-width: calc(var(--measure) + 4rem); font-family: var(--font-ui); }
+.exam-form .ctl { flex: 1 1 170px; }
+.exam-summary { max-width: calc(var(--measure) + 4rem); margin-bottom: 2rem; padding: 1.2rem; border: 1px solid var(--accent); border-radius: var(--r); background: var(--panel); }
+.exam-bar { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 56px); z-index: 4; }
+.pcard.is-wrong { border-color: var(--bad); }
+.pstatus.bad { color: var(--bad); }
+
+/* ---------- fourth tier ---------- */
+.pips i:nth-child(4) { height: 15px; }
+.lvl-4 .pips i.on { background: var(--c4); }
+.lvl-4 { border-top: 3px solid var(--c4); }
+.tiers i.x { background: transparent; border: 1px solid var(--c4); }
+.tiers i.x.on { background: var(--c4); }
+.tchip.x { border-style: dashed; }
+.tchip.x.on { border-color: var(--c4); color: var(--c4); background: transparent; border-style: solid; }
+.ramp i:nth-child(6) { height: 100%; } .ramp i:nth-child(5) { height: 84%; } .ramp i:nth-child(4) { height: 68%; } .ramp i:nth-child(3) { height: 52%; } .ramp i:nth-child(2) { height: 36%; } .ramp i:nth-child(1) { height: 20%; }
+.kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (min-width: 1280px) { .kpis { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }

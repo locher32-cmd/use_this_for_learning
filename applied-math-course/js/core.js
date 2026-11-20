@@ -7,6 +7,11 @@
   AM.widgets = {};
   AM.module = (def) => { AM.modules.push(def); return def; };
   AM.widget = (name, mount) => { AM.widgets[name] = mount; };
+  /* Attach an Exam-level (tier 4) generator to the lesson "module-lesson". Load after the module. */
+  AM.exam = (fid, gen) => {
+    for (const m of AM.modules) for (const l of m.lessons) if (`${m.id}-${l.id}` === fid) { l.practice = l.practice.filter((p) => p.level !== 4); l.practice.push({ level: 4, gen }); return; }
+    throw new Error(`AM.exam: no lesson ${fid}`);
+  };
 
   /* ---------------- Seeded random numbers (reproducible problems) ---------------- */
   function mulberry32(a) {

@@ -61,6 +61,40 @@ const { chromium } = require('playwright');
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth + 1);
     if (overflow) errors.push(`horizontal page overflow @ ${r}`);
   }
+  /* ---- end-to-end study flow: solve a lesson correctly, check review scheduling, take an exam ---- */
+  {
+    const fid = routes.find((r) => r.endsWith('-limits'));
+    await page.evaluate((h) => { location.hash = h; }, fid); await page.waitForTimeout(100);
+    await page.evaluate(() => localStorage.clear()); // after navigating, so no in-memory state is written back
+    await page.reload(); await page.waitForTimeout(300);
+    const solved = await page.evaluate(() => {
+      const cards = [...document.querySelectorAll('.pcard')];
+      cards.forEach((c) => {
+        const a = c._prob.ans, v = window.AM.answerInput(a);
+        if (a.type === 'mc') c.querySelector(`input[type=radio][value="${v}"]`).checked = true; else c.querySelector('.pin').value = v;
+        c.querySelector('button[type=submit]').click();
+      });
+      return cards.filter((c) => c.classList.contains('is-solved')).length + '/' + cards.length;
+    });
+    if (solved !== '4/4') errors.push(`expected 4/4 practice levels solved through the UI, got ${solved}`);
+    const st = await page.evaluate((h) => { const S = window.AM.app.state; return { tiers: S.lessons[h].tiers.join(''), srs: !!S.srs[h] }; }, fid);
+    if (st.tiers !== '1111' || !st.srs) errors.push(`lesson progress not recorded: ${JSON.stringify(st)}`);
+    for (const r of ['review', 'progress', 'exam']) {
+      await page.evaluate((h) => { location.hash = h; }, r); await page.waitForTimeout(150);
+      const bad = await page.$$eval('#view .err', (els) => els.map((e) => e.textContent)); bad.forEach((b) => errors.push(`visible error @ ${r}: ${b}`));
+    }
+    await page.selectOption('#ex-len', '15'); await page.click('#ex-start'); await page.waitForTimeout(400);
+    const nq = await page.$$eval('.pcard', (els) => els.length);
+    if (nq !== 15) errors.push(`exam rendered ${nq} questions instead of 15`);
+    await page.evaluate(() => { const c = document.querySelector('.pcard'); const a = c._prob.ans, v = window.AM.answerInput(a); if (a.type === 'mc') c.querySelector(`input[value="${v}"]`).checked = true; else c.querySelector('.pin').value = v; });
+    await page.click('#exam-submit'); await page.waitForTimeout(300);
+    const summary = await page.$eval('.exam-summary h2', (e) => e.textContent).catch(() => '');
+    if (!/Result: [1-9]\d* \/ 15/.test(summary)) errors.push(`exam summary wrong: "${summary}"`);
+    await page.evaluate(() => { location.hash = 'progress'; }); await page.waitForTimeout(200);
+    const kpi = await page.$eval('.kpis', (e) => e.textContent);
+    if (!/^1\/\d+lessons/.test(kpi.replace(/\s+/g, ''))) errors.push(`dashboard didn't count the completed lesson: ${kpi.slice(0, 80)}`);
+    if (shots) { await page.screenshot({ path: path.join(shots, 'progress.png'), fullPage: true }); }
+  }
   if (shots) {
     const snap = async (name, hash, opts = {}) => {
       await page.evaluate((h) => { location.hash = h; }, hash); await page.waitForTimeout(500);
