@@ -129,7 +129,8 @@
       if (!this.o.xticks) for (let x = Math.ceil(xmin / sx) * sx; x <= xmax - sx * 0.3; x += sx) xs.push(x);
       c.textAlign = 'center'; c.textBaseline = 'top';
       const ty = ay > this.h - 18 ? ay - 15 : ay + 4;
-      xs.forEach((x) => { if (Math.abs(x) < sx * 1e-6) return; const px = this.X(x); if (px < 12 || px > this.w - 12) return; c.fillText(xf(x), px, ty); });
+      const xlabW = this.o.xlabel ? c.measureText(this.o.xlabel).width + 22 : 12; // keep tick labels clear of the axis title
+      xs.forEach((x) => { if (Math.abs(x) < sx * 1e-6) return; const px = this.X(x); if (px < 12 || px > this.w - xlabW) return; c.fillText(xf(x), px, ty); });
       c.textAlign = ax < 30 ? 'left' : 'right'; c.textBaseline = 'middle';
       const tx = ax < 30 ? ax + 5 : ax - 5;
       for (let y = Math.ceil(ymin / sy) * sy; y <= ymax; y += sy) { if (Math.abs(y) < sy * 1e-6) continue; const py = this.Y(y); if (py < 10 || py > this.h - 10) continue; c.fillText(yf(y), tx, py); }

@@ -7,6 +7,13 @@
   AM.widgets = {};
   AM.module = (def) => { AM.modules.push(def); return def; };
   AM.widget = (name, mount) => { AM.widgets[name] = mount; };
+  /* Insert an extra lesson into an existing module: AM.addLesson('calc2', lesson, { after: 'techniques' }). */
+  AM.addLesson = (modId, lesson, where = {}) => {
+    const m = AM.modules.find((x) => x.id === modId); if (!m) throw new Error(`AM.addLesson: no module ${modId}`);
+    const ref = where.after || where.before, i = ref ? m.lessons.findIndex((l) => l.id === ref) : -1;
+    if (ref && i < 0) throw new Error(`AM.addLesson: no lesson ${ref} in ${modId}`);
+    m.lessons.splice(ref ? (where.after ? i + 1 : i) : m.lessons.length, 0, lesson);
+  };
   /* Attach an Exam-level (tier 4) generator to the lesson "module-lesson". Load after the module. */
   AM.exam = (fid, gen) => {
     for (const m of AM.modules) for (const l of m.lessons) if (`${m.id}-${l.id}` === fid) { l.practice = l.practice.filter((p) => p.level !== 4); l.practice.push({ level: 4, gen }); return; }
